@@ -2,7 +2,18 @@
 
 Notarization component interacts with smart contracts and IPFS
 
-## npm scripts
+## Environment
+
+This program uses environmental variables for configurations in production. Out of box software works in development mode. In development mode preset enviroment is used.
+
+When in production, following enviromental variables must be set;
+
+```
+PORT=[port to listen to]
+GETH=[ip:port for ethereum node]
+```
+
+## NPM scripts
 
 ```
 npm start - Starts the application with nodemon and babel
@@ -10,7 +21,7 @@ npm run build - Build application for production use
 npm run serve - Start the production application
 ```
 
-## Smart contract
+## Smart contract setup for development enviroment
 
 Follow this procedure to migrate smart contracts for development environment
 
