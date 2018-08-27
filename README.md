@@ -1,7 +1,9 @@
 # notarization-component
 
 Notarization component interacts with smart contracts and IPFS
-##Smart contract
+
+## Smart contract
+
 Follow this procedure to migrate smart contracts for development environment
 
 1. Go to smart_contract folder
