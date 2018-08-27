@@ -101,3 +101,15 @@ docRouter.post('/get_doc', async (req, res) => {
 
   res.send(result[0].content.toString('utf-8'));
 });
+
+// @route   POST api/doc/is_valid
+// @desc    Endpoint to check if a certain document is notarized and therefor valid
+// @access  Public
+docRouter.post('/is_valid', async (req, res) => {
+  console.log(req.body.data);
+  
+  let isNotarized = await poeContract.isNotarized(req.body.data)
+  console.log(isNotarized);
+  res.send("ebin")
+  
+})

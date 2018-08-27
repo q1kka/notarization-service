@@ -20,4 +20,9 @@ contract POE {
     function getTimestamp(string _id) public view returns(uint) {
         return notorizations[_id].time;
     }
+
+    function isNotarized(string _id) public view returns(bool) {
+        if(notorizations[_id].hash == 0) return false;
+        else return true;
+    }
 }
