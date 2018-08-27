@@ -2,6 +2,14 @@
 
 Notarization component interacts with smart contracts and IPFS
 
+## npm scripts
+
+```
+npm start - Starts the application with nodemon and babel
+npm run build - Build application for production use
+npm run serve - Start the production application
+```
+
 ## Smart contract
 
 Follow this procedure to migrate smart contracts for development environment

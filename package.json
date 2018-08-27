@@ -4,7 +4,9 @@
   "description": "Notarization component interacts with smart contracts and IPFS",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "nodemon app.js --exec babel-node --presets env",
+    "build": "babel src -d dist --presets env",
+    "serve": "node dist/app.js"
   },
   "repository": {
     "type": "git",
@@ -24,5 +26,10 @@
     "ipfs": "^0.31.7",
     "truffle-contract": "^3.0.6",
     "web3": "^1.0.0-beta.35"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.26.0",
+    "babel-preset-env": "^1.7.0",
+    "nodemon": "^1.18.3"
   }
 }
