@@ -86,3 +86,18 @@ docRouter.post('/insert', async (req, res) => {
     });
   }
 });
+
+// @route   POST api/doc/get_doc
+// @desc    Uses ID to get the hash from blockchain, and using that gets the data from IPFS
+// @access  Public
+docRouter.post('/get_doc', async (req, res) => {
+  console.log(req.body);
+  let hash = await poeContract.getHash(req.body.data);
+  let fileToGet = hash.substring(2);
+  fileToGet = '1220' + fileToGet;
+  const bytes = Buffer.from(fileToGet, 'hex');
+  const text = bs58.encode(bytes);
+  let result = await ipfs.files.get(text);
+
+  res.send(result[0].content.toString('utf-8'));
+});
