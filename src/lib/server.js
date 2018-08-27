@@ -3,7 +3,27 @@
 * Initializes both IPFS and the connection to eth-node with web3
 */
 
+import express from 'express';
+
+//Import middleware
+import cors from 'cors';
+import bodyParser from 'body-parser';
+
+//Import routes
+import doc from '../routes/doc';
+
+const app = express();
 const PORT = 5000;
+
+//Middlewares
+app.use(cors());
+app.use(bodyParser.json());
+
+app.use('/api/doc', doc);
+
+app.all('*', (req, res) => {
+  return res.sendStatus(404);
+});
 
 export const start = () => {
   app.listen(PORT, () => {
