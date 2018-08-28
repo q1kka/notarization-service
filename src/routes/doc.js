@@ -18,6 +18,11 @@ import bs58 from 'bs58';
 //Lib for creating unique ids
 import uniqid from 'uniqid';
 
+//Lib for handling multipart/from-data
+import multer from 'multer'
+const storage = multer.memoryStorage()
+const upload = multer({storage: storage})
+
 const docRouter = (module.exports = new Router());
 
 const ethNode = process.env.GETH || 'http://localhost:9545';
@@ -47,28 +52,26 @@ web3.eth
 	.then(instance => {
 		poeContract = instance;
 	});
-
 // @route   POST api/doc/insert
 // @desc    Inserts new document to IPFS & blockchain
 // @access  Public
-docRouter.post('/insert', async (req, res) => {
+docRouter.post('/insert', upload.single('document'), async (req, res) => {
+
+	let buffer, hashObject
+
 	//Make sure data is not empty, and if it is, return error
-	try {
-		if (req.body.data.length < 1) {
-			return res.sendStatus(400);
-		}
-	} catch (error) {
-		res.json({
-			success: false,
-			error: "Data can't be empty"
-		});
-		return;
+	if(!req.file && !req.body.data) res.status(400).send('No data found')
+	if(req.body.data) {
+
+		//If request contains json object, create a buffer and send the data to the IPFS database
+		buffer = Buffer.from(req.body.data);
+		hashObject = await ipfs.files.add(buffer);
 	}
+	else if(req.file) {
 
-	//Create a buffer and send the data to the IPFS database
-	let buffer = Buffer.from(req.body.data);
-	let hashObject = await ipfs.files.add(buffer);
-
+		//If request is a file, send it to the IPFS database
+		hashObject = await ipfs.files.add(req.file)
+	} 
 	//Create unique id
 	const id = uniqid();
 
@@ -86,7 +89,7 @@ docRouter.post('/insert', async (req, res) => {
 			success: false,
 			error
 		});
-	}
+	}	
 });
 
 // @route   POST api/doc/get_doc

@@ -1,29 +1,29 @@
 pragma solidity ^0.4.24;
 
 contract POE {
-    struct Notorization {
+    struct Notarization {
         bytes32 hash;
         uint time;
     }
-    mapping (string => Notorization) notorizations;
+    mapping (string => Notarization) notarizations;
 
     function addHash(string _id, bytes32 _hash) public {
-        require(notorizations[_id].hash == bytes32(0), "Nolla");
-        notorizations[_id].hash = _hash;
-        notorizations[_id].time = block.timestamp;
+        require(notarizations[_id].hash == bytes32(0), "Nolla");
+        notarizations[_id].hash = _hash;
+        notarizations[_id].time = block.timestamp;
     }
 
     function getHash(string _id) public view returns(bytes32) {
-        require(notorizations[_id].hash != bytes32(0), "Nolla");
-        return notorizations[_id].hash;
+        require(notarizations[_id].hash != bytes32(0), "Nolla");
+        return notarizations[_id].hash;
     }
 
     function getTimestamp(string _id) public view returns(uint) {
-        return notorizations[_id].time;
+        return notarizations[_id].time;
     }
 
     function isNotarized(string _id) public view returns(bool) {
-        if(notorizations[_id].hash == 0) return false;
+        if(notarizations[_id].hash == 0) return false;
         else return true;
     }
 }
