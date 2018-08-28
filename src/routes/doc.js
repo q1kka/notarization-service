@@ -93,24 +93,48 @@ docRouter.post('/insert', async (req, res) => {
 // @desc    Uses ID to get the hash from blockchain, and using that gets the data from IPFS
 // @access  Public
 docRouter.post('/get_doc', async (req, res) => {
-	console.log(req.body);
-	let hash = await poeContract.getHash(req.body.data);
-	let fileToGet = hash.substring(2);
-	fileToGet = '1220' + fileToGet;
-	const bytes = Buffer.from(fileToGet, 'hex');
-	const text = bs58.encode(bytes);
-	let result = await ipfs.files.get(text);
+	try {
+		//hash of the document is fetched from the blockchain
+		//and converted to the right form so that it can be fetched
+		//from ipfs
+		const hash = await poeContract.getHash(req.body.data);
+		const ipfsAddress = '1220' + hash.substring(2);
+		const bytes = Buffer.from(ipfsAddress, 'hex');
+		const text = bs58.encode(bytes);
+		const document = await ipfs.files.get(text);
 
-	res.send(result[0].content.toString('utf-8'));
+		//document is sent
+		res.send(document[0].content.toString('utf-8'));
+
+	//if something goes wrong, a status code 400 is sent
+	//and also error message
+	}catch(err) {
+		res.status(400).send(err.message)
+	}
 });
 
 // @route   POST api/doc/is_valid
 // @desc    Endpoint to check if a certain document is notarized and therefor valid
 // @access  Public
 docRouter.post('/is_valid', async (req, res) => {
-	console.log(req.body.data);
-
+	let obj = {}
 	let isNotarized = await poeContract.isNotarized(req.body.data);
-	console.log(isNotarized);
-	res.send('ebin');
+
+	//if document is notarized then notarization is marked as true
+	//and date of the notarizatioin is added to the object
+	if(isNotarized) {
+		obj = {
+			isNotarized: true,
+			date: await poeContract.getTimestamp(req.body.data)
+		}
+	//else notarization is marked as false, and date marked as null
+	} else {
+		obj= {
+			isNotarized: false,
+			date: null
+		}
+	}
+	
+	//returns the objects
+	res.send(obj);
 });

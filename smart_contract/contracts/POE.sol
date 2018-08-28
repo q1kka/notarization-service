@@ -14,6 +14,7 @@ contract POE {
     }
 
     function getHash(string _id) public view returns(bytes32) {
+        require(notorizations[_id].hash != bytes32(0), "Nolla");
         return notorizations[_id].hash;
     }
 
