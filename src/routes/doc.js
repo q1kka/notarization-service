@@ -26,7 +26,7 @@ const upload = multer({ storage });
 
 const docRouter = (module.exports = new Router());
 
-const ethNode = process.env.GETH || 'http:// localhost:9545';
+const ethNode = process.env.GETH || 'http://localhost:9545';
 
 const web3 = new Web3(new Web3.providers.HttpProvider(ethNode));
 const ipfs = new IPFS();
