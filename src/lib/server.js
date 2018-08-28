@@ -22,17 +22,17 @@ app.use(bodyParser.json());
 app.use('/api/doc', doc);
 
 app.all('*', (req, res) => {
-	return res.sendStatus(404);
+  return res.sendStatus(404);
 });
 
 export const start = () => {
-	app.listen(PORT, () => {
-		console.log(`Server listening on port: ${PORT}`);
-	});
+  app.listen(PORT, () => {
+    console.log(`Server listening on port: ${PORT}`);
+  });
 };
 
 export const stop = () => {
-	app.close(PORT, () => {
-		console.log('Server stopped');
-	});
+  app.close(PORT, () => {
+    console.log('Server stopped');
+  });
 };
