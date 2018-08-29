@@ -113,7 +113,7 @@ docRouter.post('/notarize', upload.single('file'), async (req, res) => {
   }
 });
 
-//  @route   GET api/fetch
+//  @route   GET api/fetch/?id=[id]
 //  @desc    Uses ID to get the hash from blockchain, and using that gets the data from IPFS
 //  @access  Public
 docRouter.get('/fetch', async (req, res) => {
@@ -149,13 +149,13 @@ docRouter.get('/fetch', async (req, res) => {
   }
 });
 
-//  @route   POST api/doc/is_valid
+//  @route   POST api/validate
 //  @desc    Endpoint to check if a certain document is notarized and therefor valid
 //  @access  Public
-docRouter.post('/is_valid', async (req, res) => {
+docRouter.post('/validate', async (req, res) => {
   let obj = {};
-  const isNotarized = await poeContract.isNotarized(req.body.data);
-
+  const isNotarized = await poeContract.isNotarized(req.body);
+  console.log(isNotarized);
   // if document is notarized then notarization is marked as true
   // and date of the notarizatioin is added to the object
   if (isNotarized) {
