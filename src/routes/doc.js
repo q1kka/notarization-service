@@ -14,6 +14,9 @@ import IPFS from 'ipfs';
 // Lib for encoding & decoding
 import bs58 from 'bs58';
 
+// Lib for figuring out the filetype of buffer
+import fileType from 'file-type';
+
 // Lib for creating unique ids
 import uniqid from 'uniqid';
 
@@ -64,10 +67,12 @@ docRouter.post('/insert', upload.single('document'), async (req, res) => {
   if (req.body.data) {
     // If request contains json object, create a buffer and send the data to the IPFS database
     buffer = Buffer.from(req.body.data);
+    console.log(buffer);
     hashObject = await ipfs.files.add(buffer);
   } else if (req.file) {
+    console.log(req.file);
     // If request is a file, send it to the IPFS database
-    hashObject = await ipfs.files.add(req.file);
+    hashObject = await ipfs.files.add(req.file.buffer);
   }
   // Create unique id
   const id = uniqid();
@@ -103,10 +108,21 @@ docRouter.post('/get_doc', async (req, res) => {
     const text = bs58.encode(bytes);
     const document = await ipfs.files.get(text);
 
-    console.log(document);
-    // document is sent
-    res.send(document[0].content.toString('utf-8'));
+    console.log(document[0]);
+    console.log(fileType(document[0].content));
 
+    // Check the file format of the file. If it is just text, convert it to utf-8 string, and if
+    // it is a file, convert it back to it's original format before sending it back to user
+    // NOTE: This may be better done in client side, but we're doing it here for the sake of early development
+    // TODO: Figure out which way is better
+    if (fileType(document[0].content) == null) {
+      // document is sent
+      res.send(document[0].content.toString('utf-8'));
+    } else {
+      // Document is being converted into it's original format, and then sent
+      res.set('Content-type', fileType(document[0].content).mime);
+      res.send(document[0].content);
+    }
     // if something goes wrong, a status code 400 is sent
     // and also error message
   } catch (err) {
