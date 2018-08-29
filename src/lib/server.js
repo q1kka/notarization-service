@@ -10,7 +10,7 @@ import cors from 'cors';
 import bodyParser from 'body-parser';
 
 //Import routes
-import doc from '../routes/doc';
+import notarization from '../routes/notarization';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -19,8 +19,10 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(bodyParser.json());
 
-app.use('/api/doc', doc);
+//Define API routes. Define new versions in different routes to achieve backwards compatibility in integrations.
+app.use('/api/', notarization);
 
+//Catch all other routes
 app.all('*', (req, res) => {
   return res.sendStatus(404);
 });
