@@ -62,14 +62,14 @@ web3.eth
 //  @route   POST api/notarize
 //  @desc    Inserts new document to IPFS & blockchain
 //  @access  Public
-docRouter.post('/notarize', upload.single('document'), async (req, res) => {
+docRouter.post('/notarize', upload.single('file'), async (req, res) => {
   let hashObject;
   // Check content-type
-  const contentType = req.headers['content-type'];
+  const contentType = req.headers['content-type'].split(';')[0];
   switch (contentType) {
     case 'application/json':
       if (!isEmpty(req.body)) {
-        const buffer = Buffer.from(`${req.body}`);
+        const buffer = Buffer.from(`${JSON.stringify(req.body)}`);
         hashObject = await ipfs.files.add(buffer);
       } else {
         res.status(400).send({
@@ -113,34 +113,34 @@ docRouter.post('/notarize', upload.single('document'), async (req, res) => {
   }
 });
 
-//  @route   POST api/doc/get_doc
+//  @route   GET api/fetch
 //  @desc    Uses ID to get the hash from blockchain, and using that gets the data from IPFS
 //  @access  Public
-docRouter.post('/get_doc', async (req, res) => {
+docRouter.get('/fetch', async (req, res) => {
+  const identifier = req.query.id;
   try {
     // hash of the document is fetched from the blockchain
     // and converted to the right form so that it can be fetched
     // from ipfs
-    const hash = await poeContract.getHash(req.body.data);
+    const hash = await poeContract.getHash(identifier);
     const ipfsAddress = `1220${hash.substring(2)}`;
     const bytes = Buffer.from(ipfsAddress, 'hex');
     const text = bs58.encode(bytes);
     const document = await ipfs.files.get(text);
-
-    console.log(document[0]);
-    console.log(fileType(document[0].content));
-
-    // Check the file format of the file. If it is just text, convert it to utf-8 string, and if
-    // it is a file, convert it back to it's original format before sending it back to user
-    // NOTE: This may be better done in client side, but we're doing it here for the sake of early development
-    // TODO: Figure out which way is better
+    const downloadLink = `https://gateway.ipfs.io/ipfs/${document[0].path}`;
+    // Check the file format of the file. If it is just json, convert it to utf-8 string and send in response
     if (fileType(document[0].content) == null) {
-      // document is sent
-      res.send(document[0].content.toString('utf-8'));
-    } else {
-      // Document is being converted into it's original format, and then sent
-      res.set('Content-type', fileType(document[0].content).mime);
-      res.send(document[0].content);
+      res.json({
+        success: true,
+        data: JSON.parse(document[0].content.toString('utf-8'))
+      });
+    }
+    // If file is not text, send link to gateway instead.
+    else {
+      res.json({
+        success: true,
+        link: downloadLink
+      });
     }
     // if something goes wrong, a status code 400 is sent
     // and also error message
