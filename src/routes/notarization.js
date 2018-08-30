@@ -21,9 +21,6 @@ import fileType from 'file-type';
 import uniqid from 'uniqid';
 
 // Lib for generating a secret key
-import rsaKeygen from 'rsa-keygen';
-
-// Lib for generating a secret key
 import NodeRSA from 'node-rsa';
 
 import fs from 'fs';
@@ -93,7 +90,10 @@ docRouter.post('/notarize', upload.single('file'), async (req, res) => {
       break;
     case 'multipart/form-data':
       if (req.file) {
-        hashObject = await ipfs.files.add(req.file.buffer);
+        const buffer = key.encrypt(req.file.buffer);
+
+        hashObject = await ipfs.files.add(buffer);
+        // hashObject = await ipfs.files.add(req.file.buffer);
       } else {
         res.status(400).send({
           success: false,
@@ -135,7 +135,7 @@ docRouter.post('/notarize', upload.single('file'), async (req, res) => {
 docRouter.get('/fetch', async (req, res) => {
   const identifier = req.query.id;
   console.log(identifier);
-  
+
   try {
     // hash of the document is fetched from the blockchain
     // and converted to the right form so that it can be fetched
@@ -145,10 +145,12 @@ docRouter.get('/fetch', async (req, res) => {
     const bytes = Buffer.from(ipfsAddress, 'hex');
     const text = bs58.encode(bytes);
     const document = await ipfs.files.get(text);
-    const downloadLink = `https://gateway.ipfs.io/ipfs/${document[0].path}`;
+    console.log(fileType(document[0].content));
+    console.log(document[0]);
+
     // Check the file format of the file. If it is just json, convert it to utf-8 string and send in response
-    if (fileType(document[0].content) == null) {
-      const encryptedString = document[0].content
+    if (fileType(key.decrypt(document[0].content)) == null) {
+      const encryptedString = document[0].content;
       const decrypted = key.decrypt(encryptedString, 'utf-8');
       res.json({
         success: true,
@@ -157,10 +159,15 @@ docRouter.get('/fetch', async (req, res) => {
     }
     // If file is not text, send link to gateway instead.
     else {
+      const encryptedFile = document[0].content;
+      const decrypted = key.decrypt(encryptedFile);
+      const downloadLink = `https://gateway.ipfs.io/ipfs/${document[0].path}`;
       res.json({
         success: true,
         link: downloadLink
       });
+      //res.set('Content-type', fileType(decrypted).mime);
+      //res.send(decrypted);
     }
     // if something goes wrong, a status code 400 is sent
     // and also error message
