@@ -41,7 +41,7 @@ Poe.setProvider(web3.currentProvider);
 
 // Workaround for "TypeError: Cannot read property 'apply' of undefined"
 if (typeof Poe.currentProvider.sendAsync !== 'function') {
-  Poe.currentProvider.sendAsync = function () {
+  Poe.currentProvider.sendAsync = function() {
     return Poe.currentProvider.send.apply(Poe.currentProvider, arguments);
   };
 }
