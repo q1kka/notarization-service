@@ -39,12 +39,3 @@ Now you have started a local Ethereum blockchain instance, and other application
 ## Encryption
 
 All the files are hosted in IPFS, but as the files are available for everyone with the correct hash, we need to encrypt the files before uploading them. When the file is being fetched back, it'll be decrypted back to it's original form. These files are in public/ folder. In production, these files are removed after expiration time. Encryption is done with RSA key located in ./keys/ folder.
-
-## Http-server
-
-Http-server is used for local file hosting after the file has been fetched from IPFS
-
-1. Install http-server globally
-   `npm install http-server -g`
-2. Run http-server on port 8080 in the root folder of this app
-   `http-server`
