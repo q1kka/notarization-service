@@ -34,7 +34,7 @@ import isEmpty from '../utils/isEmpty';
 
 // For encrypting and decrypting data
 const privateKey = fs.readFileSync('./keys/rsa_512_key.pem');
-const key = new NodeRSA({ keyData: privateKey });
+const key = new NodeRSA({ keyData: privateKey }, { encryptionScheme: 'pkcs1' });
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
@@ -145,8 +145,6 @@ docRouter.get('/fetch', async (req, res) => {
     const bytes = Buffer.from(ipfsAddress, 'hex');
     const text = bs58.encode(bytes);
     const document = await ipfs.files.get(text);
-    console.log(fileType(document[0].content));
-    console.log(document[0]);
 
     // Check the file format of the file. If it is just json, convert it to utf-8 string and send in response
     if (fileType(key.decrypt(document[0].content)) == null) {
@@ -161,20 +159,25 @@ docRouter.get('/fetch', async (req, res) => {
     else {
       const encryptedFile = document[0].content;
       const decrypted = key.decrypt(encryptedFile);
+
+      //Try to append the data to file
       try {
-        fs.appendFileSync('./public/test.jpg', decrypted);
-        console.log('The "data to append" was appended to file!');
+        fs.appendFileSync(
+          `./public/${text}.${fileType(decrypted).ext}`,
+          decrypted
+        );
+
+        //Return a link to the file
+        res.json({
+          success: true,
+          link: `http://localhost:8080/${text}.${fileType(decrypted).ext}`
+        });
       } catch (err) {
-        /* Handle the error */
-        console.log('err', err);
+        //Handle the error
+        res.json({
+          success: false
+        });
       }
-      // const downloadLink = `https://gateway.ipfs.io/ipfs/${document[0].path}`;
-      // res.json({
-      //   success: true,
-      //   link: downloadLink
-      // });
-      // res.set('Content-type', fileType(decrypted).mime);
-      // res.send(decrypted);
     }
     // if something goes wrong, a status code 400 is sent
     // and also error message
