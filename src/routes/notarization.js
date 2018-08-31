@@ -79,7 +79,6 @@ docRouter.post('/notarize', upload.single('file'), async (req, res) => {
     case 'application/json':
       if (!isEmpty(req.body)) {
         const buffer = key.encrypt(Buffer.from(`${JSON.stringify(req.body)}`));
-        console.log(buffer);
         hashObject = await ipfs.files.add(buffer);
       } else {
         res.status(400).send({
@@ -112,8 +111,6 @@ docRouter.post('/notarize', upload.single('file'), async (req, res) => {
   const parsed = `0x${bytes.toString('hex').substring(4)}`;
   try {
     const result = await poeContract.addHash(id, parsed);
-    console.log(result);
-
     res.json({
       success: true,
       ethereum_txid: result.tx,
@@ -134,8 +131,6 @@ docRouter.post('/notarize', upload.single('file'), async (req, res) => {
 //  @access  Public
 docRouter.get('/fetch', async (req, res) => {
   const identifier = req.query.id;
-  console.log(identifier);
-
   try {
     // hash of the document is fetched from the blockchain
     // and converted to the right form so that it can be fetched
@@ -191,12 +186,7 @@ docRouter.get('/fetch', async (req, res) => {
 //  @access  Public
 docRouter.post('/validate', async (req, res) => {
   let obj = {};
-  console.log(req.body);
   const isNotarized = await poeContract.isNotarized(req.body.data);
-  console.log(isNotarized);
-
-  console.log(await web3.eth.getBlock(14));
-
   // if document is notarized then notarization is marked as true
   // and date of the notarizatioin is added to the object
   if (isNotarized) {
