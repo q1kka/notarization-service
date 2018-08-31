@@ -50,7 +50,7 @@ Poe.setProvider(web3.currentProvider);
 
 // Workaround for "TypeError: Cannot read property 'apply' of undefined"
 if (typeof Poe.currentProvider.sendAsync !== 'function') {
-  Poe.currentProvider.sendAsync = function() {
+  Poe.currentProvider.sendAsync = function () {
     return Poe.currentProvider.send.apply(Poe.currentProvider, arguments);
   };
 }
@@ -170,7 +170,7 @@ docRouter.get('/fetch', async (req, res) => {
         //Return a link to the file
         res.json({
           success: true,
-          link: `http://localhost:8080/${text}.${fileType(decrypted).ext}`
+          link: `http://localhost:3000/files/${text}.${fileType(decrypted).ext}`
         });
       } catch (err) {
         //Handle the error
