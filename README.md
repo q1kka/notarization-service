@@ -38,7 +38,7 @@ Now you have started a local Ethereum blockchain instance, and other application
 
 ## Encryption
 
-All the files are hosted in IPFS, but as the files are available for everyone with the correct hash, we need to encrypt the files before uploading them. When the file is being fetched back, it'll be decrypted back to it's original form. Encryption is done with RSA key located in ./keys/ folder.
+All the files are hosted in IPFS, but as the files are available for everyone with the correct hash, we need to encrypt the files before uploading them. When the file is being fetched back, it'll be decrypted back to it's original form. These files are in public/ folder. In production, these files are removed after expiration time. Encryption is done with RSA key located in ./keys/ folder.
 
 ## Http-server
 
