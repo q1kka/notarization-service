@@ -161,13 +161,20 @@ docRouter.get('/fetch', async (req, res) => {
     else {
       const encryptedFile = document[0].content;
       const decrypted = key.decrypt(encryptedFile);
-      const downloadLink = `https://gateway.ipfs.io/ipfs/${document[0].path}`;
-      res.json({
-        success: true,
-        link: downloadLink
-      });
-      //res.set('Content-type', fileType(decrypted).mime);
-      //res.send(decrypted);
+      try {
+        fs.appendFileSync('./public/test.jpg', decrypted);
+        console.log('The "data to append" was appended to file!');
+      } catch (err) {
+        /* Handle the error */
+        console.log('err', err);
+      }
+      // const downloadLink = `https://gateway.ipfs.io/ipfs/${document[0].path}`;
+      // res.json({
+      //   success: true,
+      //   link: downloadLink
+      // });
+      // res.set('Content-type', fileType(decrypted).mime);
+      // res.send(decrypted);
     }
     // if something goes wrong, a status code 400 is sent
     // and also error message
