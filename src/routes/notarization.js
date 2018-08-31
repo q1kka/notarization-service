@@ -20,12 +20,21 @@ import fileType from 'file-type';
 // Lib for creating unique ids
 import uniqid from 'uniqid';
 
+// Lib for generating a secret key
+import NodeRSA from 'node-rsa';
+
+import fs from 'fs';
+
 // Lib for handling multipart/from-data
 import multer from 'multer';
 import POEApi from '../../smart_contract/build/contracts/POE.json';
 
 // Utils
 import isEmpty from '../utils/isEmpty';
+
+// For encrypting and decrypting data
+const privateKey = fs.readFileSync('./keys/rsa_512_key.pem');
+const key = new NodeRSA({ keyData: privateKey }, { encryptionScheme: 'pkcs1' });
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
@@ -69,7 +78,7 @@ docRouter.post('/notarize', upload.single('file'), async (req, res) => {
   switch (contentType) {
     case 'application/json':
       if (!isEmpty(req.body)) {
-        const buffer = Buffer.from(`${JSON.stringify(req.body)}`);
+        const buffer = key.encrypt(Buffer.from(`${JSON.stringify(req.body)}`));
         hashObject = await ipfs.files.add(buffer);
       } else {
         res.status(400).send({
@@ -80,7 +89,10 @@ docRouter.post('/notarize', upload.single('file'), async (req, res) => {
       break;
     case 'multipart/form-data':
       if (req.file) {
-        hashObject = await ipfs.files.add(req.file.buffer);
+        const buffer = key.encrypt(req.file.buffer);
+
+        hashObject = await ipfs.files.add(buffer);
+        // hashObject = await ipfs.files.add(req.file.buffer);
       } else {
         res.status(400).send({
           success: false,
@@ -103,6 +115,7 @@ docRouter.post('/notarize', upload.single('file'), async (req, res) => {
       success: true,
       ethereum_txid: result.tx,
       ipfs_hash: hashObject[0].path,
+      block_number: result.receipt.blockNumber,
       id
     });
   } catch (error) {
@@ -127,20 +140,39 @@ docRouter.get('/fetch', async (req, res) => {
     const bytes = Buffer.from(ipfsAddress, 'hex');
     const text = bs58.encode(bytes);
     const document = await ipfs.files.get(text);
-    const downloadLink = `https://gateway.ipfs.io/ipfs/${document[0].path}`;
+
     // Check the file format of the file. If it is just json, convert it to utf-8 string and send in response
-    if (fileType(document[0].content) == null) {
+    if (fileType(key.decrypt(document[0].content)) == null) {
+      const encryptedString = document[0].content;
+      const decrypted = key.decrypt(encryptedString, 'utf-8');
       res.json({
         success: true,
-        data: JSON.parse(document[0].content.toString('utf-8'))
+        data: JSON.parse(decrypted)
       });
     }
     // If file is not text, send link to gateway instead.
     else {
-      res.json({
-        success: true,
-        link: downloadLink
-      });
+      const encryptedFile = document[0].content;
+      const decrypted = key.decrypt(encryptedFile);
+
+      //Try to append the data to file
+      try {
+        fs.appendFileSync(
+          `./public/${text}.${fileType(decrypted).ext}`,
+          decrypted
+        );
+
+        //Return a link to the file
+        res.json({
+          success: true,
+          link: `http://localhost:3000/files/${text}.${fileType(decrypted).ext}`
+        });
+      } catch (err) {
+        //Handle the error
+        res.json({
+          success: false
+        });
+      }
     }
     // if something goes wrong, a status code 400 is sent
     // and also error message
@@ -154,14 +186,13 @@ docRouter.get('/fetch', async (req, res) => {
 //  @access  Public
 docRouter.post('/validate', async (req, res) => {
   let obj = {};
-  const isNotarized = await poeContract.isNotarized(req.body);
-  console.log(isNotarized);
+  const isNotarized = await poeContract.isNotarized(req.body.data);
   // if document is notarized then notarization is marked as true
   // and date of the notarizatioin is added to the object
   if (isNotarized) {
     obj = {
       isNotarized: true,
-      date: await poeContract.getTimestamp(req.body.data)
+      date: 'date' //await poeContract.getTimestamp(req.body.data)
     };
     // else notarization is marked as false, and date marked as null
   } else {

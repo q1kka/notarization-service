@@ -12,29 +12,32 @@ import bodyParser from 'body-parser';
 //Import routes
 import notarization from '../routes/notarization';
 
-const app = express();
-const PORT = process.env.PORT || 3000;
+// Initiate api server
+const apiServer = express();
+const apiPort = process.env.apiPort || 3000;
 
 //Middlewares
-app.use(cors());
-app.use(bodyParser.json());
+apiServer.use(cors());
+apiServer.use(bodyParser.json());
 
 //Define API routes. Define new versions in different routes to achieve backwards compatibility in integrations.
-app.use('/api/', notarization);
+apiServer.use('/api/', notarization);
+//define route for files
+apiServer.use('/files', express.static(`public`));
 
 //Catch all other routes
-app.all('*', (req, res) => {
+apiServer.all('*', (req, res) => {
   return res.sendStatus(404);
 });
 
 export const start = () => {
-  app.listen(PORT, () => {
-    console.log(`Server listening on port: ${PORT}`);
+  apiServer.listen(apiPort, () => {
+    console.log(`API Server listening on port: ${apiPort}`);
   });
 };
 
 export const stop = () => {
-  app.close(PORT, () => {
-    console.log('Server stopped');
+  apiServer.close(apiPort, () => {
+    console.log('API Server stopped');
   });
 };
