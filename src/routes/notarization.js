@@ -27,10 +27,15 @@ import fs from 'fs';
 
 // Lib for handling multipart/from-data
 import multer from 'multer';
+import timeStamp from 'time-stamp';
 import POEApi from '../../smart_contract/build/contracts/POE.json';
+
+//Lib for timestamp
 
 // Utils
 import isEmpty from '../utils/isEmpty';
+import isExpired from '../utils/isExpired';
+import expirations from '../utils/expirations';
 
 // For encrypting and decrypting data
 const privateKey = fs.readFileSync('./keys/rsa_512_key.pem');
@@ -68,6 +73,11 @@ web3.eth
   .then(instance => {
     poeContract = instance;
   });
+
+setInterval(() => {
+  isExpired();
+}, 5000);
+
 //  @route   POST api/notarize
 //  @desc    Inserts new document to IPFS & blockchain
 //  @access  Public
@@ -161,6 +171,12 @@ docRouter.get('/fetch', async (req, res) => {
           `./public/${text}.${fileType(decrypted).ext}`,
           decrypted
         );
+
+        const obj = {
+          file_path: `./public/${text}.${fileType(decrypted).ext}`,
+          fetching_date: new Date().getTime()
+        };
+        expirations.addExpiration(obj);
 
         //Return a link to the file
         res.json({
