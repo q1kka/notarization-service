@@ -1,5 +1,5 @@
 /**
- * A function to check if a document is deleted. If it is expired, the document is deleted
+ * A function to check if a document is expired. If it is expired, the document is deleted
  */
 
 import fs from 'fs';
