@@ -18,10 +18,10 @@ const apiPort = process.env.apiPort || 3000;
 
 //Middlewares
 apiServer.use(cors());
-apiServer.use(bodyParser.json({ limit: '50mb' }));
+apiServer.use(bodyParser.json());
 
 //Define API routes. Define new versions in different routes to achieve backwards compatibility in integrations.
-apiServer.use('/api/notarization', notarization);
+apiServer.use('/api/', notarization);
 //define route for files
 apiServer.use('/files', express.static(`public`));
 
