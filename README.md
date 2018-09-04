@@ -8,14 +8,15 @@ This program uses environmental variables for configurations in production. Out 
 
 When in production, following enviromental variables must be set;
 
-```
+```env
 PORT=[port to listen to]
 GETH=[ip:port for ethereum node]
+EXPIRYTIME=[time to host fetched and decrypted files in seconds]
 ```
 
 ## NPM scripts
 
-```
+```bash
 npm start - Starts the application with nodemon and babel
 npm run build - Build application for production use
 npm run serve - Start the production application
