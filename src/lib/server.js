@@ -21,7 +21,7 @@ apiServer.use(cors());
 apiServer.use(bodyParser.json());
 
 //Define API routes. Define new versions in different routes to achieve backwards compatibility in integrations.
-apiServer.use('/api/', notarization);
+apiServer.use('/api/notarization', notarization);
 //define route for files
 apiServer.use('/files', express.static(`public`));
 
