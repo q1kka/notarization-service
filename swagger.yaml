@@ -1,55 +1,54 @@
-swagger: "2.0"
+swagger: '2.0'
 info:
-  description: "Notarization component is system used to notarize text or files in distributed fashion. It exposes RESTful api for which can take JSON objects / strings as ´application/json´ data or other files as ´multipart/form-data´."
-  version: "0.1.0"
-  title: "Swagger Notarization"
-host: "localhost:3000"
-basePath: "/api"
+  description: 'Notarization component is system used to notarize text or files in distributed fashion. It exposes RESTful api for which can take JSON objects / strings as ´application/json´ data or other files as ´multipart/form-data´.'
+  title: 'Notarization Component'
+  version: '0.2.0'
+host: 'localhost:3000'
+basePath: '/api'
 tags:
-- name: "Notarization"
-  description: "API"
-  externalDocs:
-    description: "Find out more"
-    url: "https://github.com/q1kka/notarization-component"
+  - name: 'API'
+    externalDocs:
+      description: 'Find out more'
+      url: 'https://github.com/q1kka/notarization-component'
 schemes:
-- "http"
+  - 'http'
 paths:
   /notarize:
     post:
-      summary: "Insert new document"
-      description: ""
-      tags: 
-        - Notarization
-      operationId: "insertDoc"
+      summary: 'Insert new document'
+      description: ''
+      tags:
+        - API
+      operationId: 'insertDoc'
       consumes:
-      - "multipart/form-data"
+        - 'multipart/form-data'
       produces:
-      - "application/json"
+        - 'application/json'
       parameters:
-      - in: "formData"
-        name: file
-        description: "Document that needs to be notarized"
-        required: true
-        type: file
+        - in: 'formData'
+          name: file
+          description: 'Document that needs to be notarized'
+          required: true
+          type: file
       responses:
         200:
-          description: "OK"
+          description: 'OK'
         405:
-          description: "Invalid input"
+          description: 'Invalid input'
   /fetch:
     get:
-      summary: "Fetch a file or text"
-      description: "Used to fetch a file or a text"
-      tags: 
-        - Notarization
-      operationId: "fethDoc"
+      summary: 'Fetch a file or text'
+      description: 'Used to fetch a file or a text'
+      tags:
+        - API
+      operationId: 'fethDoc'
       parameters:
-      - in: query
-        name: id
-        required: true
-        type: string
+        - in: query
+          name: id
+          required: true
+          type: string
       responses:
         200:
           description: OK
         400:
-          description: "Bad request"
+          description: 'Bad request'
