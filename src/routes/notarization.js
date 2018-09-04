@@ -81,8 +81,32 @@ setInterval(() => {
 //  @route   POST api/notarize
 //  @desc    Inserts new document to IPFS & blockchain
 //  @access  Public
-docRouter.post('/notarize', upload.single('file'), async (req, res) => {
-  let hashObject;
+docRouter.post('/notarize', async (req, res) => {
+  //Notarizes a document or a text
+  try {
+    const buffer = key.encrypt(Buffer.from(req.body.buffer.data));
+    const hashObject = await ipfs.files.add(buffer);
+    const bytes = bs58.decode(hashObject[0].path);
+    const parsed = `0x${bytes.toString('hex').substring(4)}`;
+    const id = uniqid();
+    const result = await poeContract.addHash(id, parsed);
+    res.json({
+      success: true,
+      ethereum_txid: result.tx,
+      ipfs_hash: hashObject[0].path,
+      block_number: result.receipt.blockNumber,
+      id
+    });
+  } catch (err) {
+    res.json({
+      success: false,
+      error: err.message
+    });
+  }
+
+  /*let hashObject;
+  console.log(req.headers);
+
   // Check content-type
   const contentType = req.headers['content-type'].split(';')[0];
   switch (contentType) {
@@ -90,6 +114,7 @@ docRouter.post('/notarize', upload.single('file'), async (req, res) => {
       if (!isEmpty(req.body)) {
         const buffer = key.encrypt(Buffer.from(`${JSON.stringify(req.body)}`));
         hashObject = await ipfs.files.add(buffer);
+        console.log('mo');
       } else {
         res.status(400).send({
           success: false,
@@ -117,6 +142,8 @@ docRouter.post('/notarize', upload.single('file'), async (req, res) => {
   // Create unique id
   const id = uniqid();
   // Decodes the address sent from Ipfs and creates a hash which is then inserted into the blockchain. In case things go south, return an error.
+  console.log('ho');
+
   const bytes = bs58.decode(hashObject[0].path);
   const parsed = `0x${bytes.toString('hex').substring(4)}`;
   try {
@@ -133,7 +160,7 @@ docRouter.post('/notarize', upload.single('file'), async (req, res) => {
       success: false,
       error
     });
-  }
+  }*/
 });
 
 //  @route   GET api/fetch/?id=[id]
@@ -155,9 +182,11 @@ docRouter.get('/fetch', async (req, res) => {
     if (fileType(key.decrypt(document[0].content)) == null) {
       const encryptedString = document[0].content;
       const decrypted = key.decrypt(encryptedString, 'utf-8');
+      console.log(decrypted);
+
       res.json({
         success: true,
-        data: JSON.parse(decrypted)
+        data: decrypted
       });
     }
     // If file is not text, send link to gateway instead.
