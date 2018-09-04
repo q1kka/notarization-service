@@ -55,7 +55,7 @@ Poe.setProvider(web3.currentProvider);
 
 // Workaround for "TypeError: Cannot read property 'apply' of undefined"
 if (typeof Poe.currentProvider.sendAsync !== 'function') {
-  Poe.currentProvider.sendAsync = function() {
+  Poe.currentProvider.sendAsync = function () {
     return Poe.currentProvider.send.apply(Poe.currentProvider, arguments);
   };
 }
@@ -78,41 +78,26 @@ setInterval(() => {
   isExpired();
 }, 5000);
 
-//  @route   POST api/notarize
+//  @route   POST api/notarization/notarize
 //  @desc    Inserts new document to IPFS & blockchain
 //  @access  Public
 docRouter.post('/notarize', upload.single('file'), async (req, res) => {
   let hashObject;
   // Check content-type
   const contentType = req.headers['content-type'].split(';')[0];
-  switch (contentType) {
-    case 'application/json':
-      if (!isEmpty(req.body)) {
-        const buffer = key.encrypt(Buffer.from(`${JSON.stringify(req.body)}`));
-        hashObject = await ipfs.files.add(buffer);
-      } else {
-        res.status(400).send({
-          success: false,
-          error: 'No JSON object body found in request'
-        });
-      }
-      break;
-    case 'multipart/form-data':
-      if (req.file) {
-        const buffer = key.encrypt(req.file.buffer);
-
-        hashObject = await ipfs.files.add(buffer);
-        // hashObject = await ipfs.files.add(req.file.buffer);
-      } else {
-        res.status(400).send({
-          success: false,
-          error: 'No data found in request'
-        });
-      }
-      break;
-    default:
-      res.json({ error: 'Content-type not supported for notarization' });
-      break;
+  if (contentType !== 'multipart/form-data')
+    res.status(400).send({
+      success: false,
+      error: 'This API only takes multipart/form-data'
+    });
+  if (req.file) {
+    const buffer = key.encrypt(req.file.buffer);
+    hashObject = await ipfs.files.add(buffer);
+  } else {
+    res.status(400).send({
+      success: false,
+      error: 'No data found in request'
+    });
   }
   // Create unique id
   const id = uniqid();
@@ -131,16 +116,17 @@ docRouter.post('/notarize', upload.single('file'), async (req, res) => {
   } catch (error) {
     res.json({
       success: false,
-      error
+      error: 'Fatal error in smart contract interaction'
     });
   }
 });
 
-//  @route   GET api/fetch/?id=[id]
+//  @route   GET api/notarization/fetch/?id=[id]
 //  @desc    Uses ID to get the hash from blockchain, and using that gets the data from IPFS
 //  @access  Public
 docRouter.get('/fetch', async (req, res) => {
   const identifier = req.query.id;
+  const expiryTime = process.env.EXPIRYTIME || 300;
   try {
     // hash of the document is fetched from the blockchain
     // and converted to the right form so that it can be fetched
@@ -165,23 +151,28 @@ docRouter.get('/fetch', async (req, res) => {
       const encryptedFile = document[0].content;
       const decrypted = key.decrypt(encryptedFile);
 
-      //Try to append the data to file
+      //Try to append the data to file and add expiration
       try {
         fs.appendFileSync(
           `./public/${text}.${fileType(decrypted).ext}`,
           decrypted
         );
-
+        const fetchingDate = new Date().getTime();
         const obj = {
           file_path: `./public/${text}.${fileType(decrypted).ext}`,
-          fetching_date: new Date().getTime()
+          fetching_date: fetchingDate
         };
         expirations.addExpiration(obj);
-
-        //Return a link to the file
+        const absoluteExpiration = new Date(fetchingDate);
+        absoluteExpiration.setSeconds(
+          absoluteExpiration.getSeconds() + expiryTime
+        );
+        absoluteExpiration.setMinutes(absoluteExpiration.getMinutes() - absoluteExpiration.getTimezoneOffset())
+        //Return a link to the file + link expiry time
         res.json({
           success: true,
-          link: `http://localhost:3000/files/${text}.${fileType(decrypted).ext}`
+          link: `http://localhost:3000/files/${text}.${fileType(decrypted).ext}`,
+          expires: absoluteExpiration.toISOString()
         });
       } catch (err) {
         //Handle the error
@@ -197,7 +188,7 @@ docRouter.get('/fetch', async (req, res) => {
   }
 });
 
-//  @route   POST api/validate
+//  @route   POST api/notarization/validate
 //  @desc    Endpoint to check if a certain document is notarized and therefor valid
 //  @access  Public
 docRouter.post('/validate', async (req, res) => {
