@@ -84,8 +84,7 @@ setInterval(() => {
 docRouter.post('/notarize', upload.single('file'), async (req, res) => {
   let hashObject;
   // Check content-type
-  const contentType = req.headers['content-type'].split(';')[0];
-  if (contentType !== 'multipart/form-data')
+  if (!req.is('multipart/form-data'))
     res.status(400).send({
       success: false,
       error: 'This API only takes multipart/form-data'
