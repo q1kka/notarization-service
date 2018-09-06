@@ -1,6 +1,6 @@
 # notarization-component
 
-Notarization component is system used to notarize text or files in distributed fashion. It exposes RESTful api for which can take JSON objects / strings as ´application/json´ data or other files as ´multipart/form-data´.
+Notarization component is system used to notarize text or files in distributed fashion. It exposes RESTful api for which takes multipart/form-data and stores it to IPFS and saves the hash to Ethereum blockchain.
 
 ## Environment
 
