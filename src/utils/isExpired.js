@@ -8,18 +8,19 @@ import isEmpty from './isEmpty';
 
 function isExpired() {
   //Expiry time in seconds
-  const expiryTime = process.env.EXPIRYTIME || 300;
+  const expiryTime = process.env.EXPIRYTIME || 5000;
   //Fetching the expiring files. If the array is empty, nothing is done
   const array = expirations.getExpirations();
-  if (isEmpty(array)) return;
+  if (isEmpty(array)) {
+    return;
+  }
   //Else the file is deleted
   try {
     const now = new Date().getTime();
     array.map(item => {
-      // Calculate the remainder of the current time and the time of fetching (in milliseconds)
-      if (now - item.fetching_date > expiryTime * 1000) {
+      if (now - item.fetching_date > expiryTime) {
         fs.unlinkSync(item.file_path);
-        array.pop(item);
+        array.pop(fileToBeDeleted);
       }
     });
   } catch (err) {
