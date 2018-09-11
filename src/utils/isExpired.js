@@ -8,7 +8,7 @@ import isEmpty from './isEmpty';
 
 function isExpired() {
   //Expiry time in seconds
-  const expiryTime = process.env.EXPIRYTIME || 5000;
+  const expiryTime = process.env.EXPIRYTIME || 300;
   //Fetching the expiring files. If the array is empty, nothing is done
   const array = expirations.getExpirations();
   if (isEmpty(array)) {
@@ -18,9 +18,9 @@ function isExpired() {
   try {
     const now = new Date().getTime();
     array.map(item => {
-      if (now - item.fetching_date > expiryTime) {
+      if (now - item.fetching_date > expiryTime * 1000) {
         fs.unlinkSync(item.file_path);
-        array.pop(fileToBeDeleted);
+        array.pop(item);
       }
     });
   } catch (err) {
