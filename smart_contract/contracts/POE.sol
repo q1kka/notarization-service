@@ -21,9 +21,4 @@ contract POE {
     function getTimestamp(string _id) public view returns(uint) {
         return notarizations[_id].time;
     }
-
-    function isNotarized(string _id) public view returns(bool) {
-        if(notarizations[_id].hash == 0) return false;
-        else return true;
-    }
 }
