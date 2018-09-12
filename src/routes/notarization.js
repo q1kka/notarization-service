@@ -55,7 +55,7 @@ Poe.setProvider(web3.currentProvider);
 
 // Workaround for "TypeError: Cannot read property 'apply' of undefined"
 if (typeof Poe.currentProvider.sendAsync !== 'function') {
-  Poe.currentProvider.sendAsync = function () {
+  Poe.currentProvider.sendAsync = function() {
     return Poe.currentProvider.send.apply(Poe.currentProvider, arguments);
   };
 }
@@ -166,11 +166,16 @@ docRouter.get('/fetch', async (req, res) => {
         absoluteExpiration.setSeconds(
           absoluteExpiration.getSeconds() + expiryTime
         );
-        absoluteExpiration.setMinutes(absoluteExpiration.getMinutes() - absoluteExpiration.getTimezoneOffset())
+        absoluteExpiration.setMinutes(
+          absoluteExpiration.getMinutes() -
+            absoluteExpiration.getTimezoneOffset()
+        );
         //Return a link to the file + link expiry time
         res.json({
           success: true,
-          link: `http://localhost:3000/files/${text}.${fileType(decrypted).ext}`,
+          link: `http://localhost:3000/files/${text}.${
+            fileType(decrypted).ext
+          }`,
           expires: absoluteExpiration.toISOString()
         });
       } catch (err) {
@@ -187,27 +192,32 @@ docRouter.get('/fetch', async (req, res) => {
   }
 });
 
-//  @route   POST api/notarization/validate
+//  @route   GET api/notarization/validate
 //  @desc    Endpoint to check if a certain document is notarized and therefor valid
 //  @access  Public
-docRouter.post('/validate', async (req, res) => {
-  let obj = {};
-  const isNotarized = await poeContract.isNotarized(req.body.data);
+docRouter.get('/validate', async (req, res) => {
+  const obj = {};
+  const isNotarized = await poeContract.isNotarized(req.query.id);
   // if document is notarized then notarization is marked as true
   // and date of the notarizatioin is added to the object
   if (isNotarized) {
-    obj = {
-      isNotarized: true,
-      date: 'date' //await poeContract.getTimestamp(req.body.data)
-    };
+    const date = await poeContract.getTimestamp(req.query.id);
+    console.log(date.c[0]);
+
+    res.json({ isNotarized: true, date: 'date.c[0]' });
+    // obj = {
+    //   isNotarized: true,
+    //   date: date.c[0] //await poeContract.getTimestamp(req.body.data)
+    // };
     // else notarization is marked as false, and date marked as null
   } else {
-    obj = {
-      isNotarized: false,
-      date: null
-    };
+    // obj = {
+    //   isNotarized: false,
+    //   date: null
+    // };
+    res.json({ isNotarized: false, date: null });
   }
 
   // returns the objects
-  res.send(obj);
+  // res.send(obj);
 });
