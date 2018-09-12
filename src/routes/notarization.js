@@ -202,22 +202,7 @@ docRouter.get('/validate', async (req, res) => {
   // and date of the notarizatioin is added to the object
   if (isNotarized) {
     const date = await poeContract.getTimestamp(req.query.id);
-    console.log(date.c[0]);
-
-    res.json({ isNotarized: true, date: 'date.c[0]' });
-    // obj = {
-    //   isNotarized: true,
-    //   date: date.c[0] //await poeContract.getTimestamp(req.body.data)
-    // };
+    res.json({ isNotarized: true, date: date.c[0] });
     // else notarization is marked as false, and date marked as null
-  } else {
-    // obj = {
-    //   isNotarized: false,
-    //   date: null
-    // };
-    res.json({ isNotarized: false, date: null });
-  }
-
-  // returns the objects
-  // res.send(obj);
+  } else res.json({ isNotarized: false, date: null }); // This is actually unneeded, because this endpoint can't be called if the notarization is not valid
 });
