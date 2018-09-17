@@ -20,45 +20,47 @@ import fileType from 'file-type';
 // Lib for creating unique ids
 import uniqid from 'uniqid';
 
-// Lib for generating a secret key
-import NodeRSA from 'node-rsa';
-
+// Lib for encryption
+import ursa from 'ursa';
 import fs from 'fs';
 
 // Lib for handling multipart/from-data
 import multer from 'multer';
-import timeStamp from 'time-stamp';
-import POEApi from '../../smart_contract/build/contracts/POE.json';
 
-//Lib for timestamp
+// Encrypting and decrypting data
+import crypto from 'crypto';
+
+// Smart contract
+import POEApi from '../../smart_contract/build/contracts/POE.json';
 
 // Utils
 import isEmpty from '../utils/isEmpty';
 import isExpired from '../utils/isExpired';
 import expirations from '../utils/expirations';
 
-// For encrypting and decrypting data
-const privateKey = fs.readFileSync('./keys/rsa_512_key.pem');
-const key = new NodeRSA({ keyData: privateKey }, { encryptionScheme: 'pkcs1' });
+// Encrypt settings
+const algorithm = 'aes-256-ctr';
+const encryptKey = process.env.ENCRYPTKEY || 'development dummy key';
 
+// form-data memory storage
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
 const docRouter = (module.exports = new Router());
 
+// ETH node settings
 const ethNode = process.env.GETH || 'http://localhost:9545';
-
 const web3 = new Web3(new Web3.providers.HttpProvider(ethNode));
-const ipfs = new IPFS();
 const Poe = new Contract(POEApi);
 Poe.setProvider(web3.currentProvider);
-
 // Workaround for "TypeError: Cannot read property 'apply' of undefined"
 if (typeof Poe.currentProvider.sendAsync !== 'function') {
-  Poe.currentProvider.sendAsync = function() {
+  Poe.currentProvider.sendAsync = function () {
     return Poe.currentProvider.send.apply(Poe.currentProvider, arguments);
   };
 }
+
+const ipfs = new IPFS();
 
 let account, poeContract;
 
@@ -78,6 +80,18 @@ setInterval(() => {
   isExpired();
 }, 5000);
 
+const encrypt = buffer => {
+  const cipher = crypto.createCipher(algorithm, encryptKey);
+  const crypted = Buffer.concat([cipher.update(buffer), cipher.final()]);
+  return crypted;
+};
+
+const decrypt = buffer => {
+  const decipher = crypto.createDecipher(algorithm, encryptKey);
+  const dec = Buffer.concat([decipher.update(buffer), decipher.final()]);
+  return dec;
+};
+
 //  @route   POST api/notarization/notarize
 //  @desc    Inserts new document to IPFS & blockchain
 //  @access  Public
@@ -90,8 +104,8 @@ docRouter.post('/notarize', upload.single('file'), async (req, res) => {
       error: 'This API only takes multipart/form-data'
     });
   if (req.file) {
-    const buffer = key.encrypt(req.file.buffer);
-    hashObject = await ipfs.files.add(buffer);
+    const encryptedBuffer = encrypt(req.file.buffer);
+    hashObject = await ipfs.files.add(encryptedBuffer);
   } else {
     res.status(400).send({
       success: false,
@@ -125,78 +139,39 @@ docRouter.post('/notarize', upload.single('file'), async (req, res) => {
 //  @access  Public
 docRouter.get('/fetch', async (req, res) => {
   const identifier = req.query.id;
-  const expiryTime = process.env.EXPIRYTIME || 300;
+  let encryptedDocument, decryptedDocument;
   try {
     // hash of the document is fetched from the blockchain
-    // and converted to the right form so that it can be fetched
-    // from ipfs
+    // and converted to the right form so that it can be fetched from ipfs
     const hash = await poeContract.getHash(identifier);
     const ipfsAddress = `1220${hash.substring(2)}`;
     const bytes = Buffer.from(ipfsAddress, 'hex');
-    const text = bs58.encode(bytes);
-    const document = await ipfs.files.get(text);
-
-    // Check the file format of the file. If it is just json, convert it to utf-8 string and send in response
-    if (fileType(key.decrypt(document[0].content)) == null) {
-      const encryptedString = document[0].content;
-      const decrypted = key.decrypt(encryptedString, 'utf-8');
-      res.json({
-        success: true,
-        data: JSON.parse(decrypted)
-      });
-    }
-    // If file is not text, send link to gateway instead.
-    else {
-      const encryptedFile = document[0].content;
-      const decrypted = key.decrypt(encryptedFile);
-
-      //Try to append the data to file and add expiration
-      try {
-        fs.appendFileSync(
-          `./public/${text}.${fileType(decrypted).ext}`,
-          decrypted
-        );
-        const fetchingDate = new Date().getTime();
-        const obj = {
-          file_path: `./public/${text}.${fileType(decrypted).ext}`,
-          fetching_date: fetchingDate
-        };
-        expirations.addExpiration(obj);
-        const absoluteExpiration = new Date(fetchingDate);
-        absoluteExpiration.setSeconds(
-          absoluteExpiration.getSeconds() + expiryTime
-        );
-        absoluteExpiration.setMinutes(
-          absoluteExpiration.getMinutes() -
-            absoluteExpiration.getTimezoneOffset()
-        );
-        //Return a link to the file + link expiry time
-        res.json({
-          success: true,
-          link: `http://localhost:3000/files/${text}.${
-            fileType(decrypted).ext
-          }`,
-          expires: absoluteExpiration.toISOString()
-        });
-      } catch (err) {
-        //Handle the error
-        res.json({
-          success: false
-        });
-      }
-    }
-    // if something goes wrong, a status code 400 is sent
-    // and also error message
+    const encoded = bs58.encode(bytes);
+    encryptedDocument = await ipfs.files.get(encoded);
   } catch (err) {
-    res.status(400).send(err.message);
+    res.status(500).json({ success: false, error: 'IPFS error' });
   }
-});
-
-//  @route   GET api/notarization/validate
-//  @desc    Endpoint to check if a certain document is notarized and therefor valid
-//  @access  Public
-docRouter.get('/validate', async (req, res) => {
-  const obj = {};
-  const date = await poeContract.getTimestamp(req.query.id);
-  res.json({ isNotarized: true, date: date.c[0] });
+  try {
+    decryptedDocument = decrypt(encryptedDocument[0].content);
+  } catch (err) {
+    res.status(500).json({ success: false, error: 'Error in decrypting' });
+  }
+  //Try to append the data to file and add expiration
+  try {
+    fs.appendFileSync(
+      `./public/${identifier}.${fileType(decryptedDocument).ext}`,
+      decryptedDocument
+    );
+  } catch (err) {
+    res
+      .status(500)
+      .json({ success: false, error: 'Error writing file to disk' });
+  }
+  //Return a link to the file + link expiry time
+  res.json({
+    success: true,
+    link: `http://localhost:3000/files/${identifier}.${
+      fileType(decryptedDocument).ext
+      }`
+  });
 });
