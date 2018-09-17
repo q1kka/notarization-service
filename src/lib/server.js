@@ -16,6 +16,11 @@ import notarization from '../routes/notarization';
 const apiServer = express();
 const apiPort = process.env.apiPort || 3000;
 
+// Log with timestamp
+const logToConsole = text => {
+  console.log(`${new Date().toLocaleString()} - ${text}`);
+};
+
 //Middlewares
 apiServer.use(cors());
 apiServer.use(bodyParser.json());
@@ -32,12 +37,13 @@ apiServer.all('*', (req, res) => {
 
 export const start = () => {
   apiServer.listen(apiPort, () => {
-    console.log(`API Server listening on port: ${apiPort}`);
+    logToConsole('API Server started');
+    logToConsole(`API Server listening on port: ${apiPort}`);
   });
 };
 
 export const stop = () => {
   apiServer.close(apiPort, () => {
-    console.log('API Server stopped');
+    logToConsole('API Server stopped');
   });
 };

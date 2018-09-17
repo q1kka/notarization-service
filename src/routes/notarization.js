@@ -14,15 +14,12 @@ import IPFS from 'ipfs';
 // Lib for encoding & decoding
 import bs58 from 'bs58';
 
-// Lib for figuring out the filetype of buffer
-import fileType from 'file-type';
-
 // Lib for creating unique ids
 import uniqid from 'uniqid';
 
-// Lib for encryption
-import ursa from 'ursa';
+// Libs for disk writes
 import fs from 'fs';
+import fileType from 'file-type';
 
 // Lib for handling multipart/from-data
 import multer from 'multer';
@@ -33,11 +30,6 @@ import crypto from 'crypto';
 // Smart contract
 import POEApi from '../../smart_contract/build/contracts/POE.json';
 
-// Utils
-import isEmpty from '../utils/isEmpty';
-import isExpired from '../utils/isExpired';
-import expirations from '../utils/expirations';
-
 // Encrypt settings
 const algorithm = 'aes-256-ctr';
 const encryptKey = process.env.ENCRYPTKEY || 'development dummy key';
@@ -45,6 +37,8 @@ const encryptKey = process.env.ENCRYPTKEY || 'development dummy key';
 // form-data memory storage
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
+
+const expirationTime = process.env.EXPIRATIONTIME || 10;
 
 const docRouter = (module.exports = new Router());
 
@@ -76,10 +70,6 @@ web3.eth
     poeContract = instance;
   });
 
-setInterval(() => {
-  isExpired();
-}, 5000);
-
 const encrypt = buffer => {
   const cipher = crypto.createCipher(algorithm, encryptKey);
   const crypted = Buffer.concat([cipher.update(buffer), cipher.final()]);
@@ -90,6 +80,15 @@ const decrypt = buffer => {
   const decipher = crypto.createDecipher(algorithm, encryptKey);
   const dec = Buffer.concat([decipher.update(buffer), decipher.final()]);
   return dec;
+};
+
+const setSelfDestruct = (path, time) => {
+  setTimeout(() => {
+    fs.unlinkSync(path);
+  }, time * 1000);
+  let returnTime = new Date();
+  returnTime = returnTime.setSeconds(returnTime.getSeconds() + time);
+  return returnTime;
 };
 
 //  @route   POST api/notarization/notarize
@@ -139,7 +138,7 @@ docRouter.post('/notarize', upload.single('file'), async (req, res) => {
 //  @access  Public
 docRouter.get('/fetch', async (req, res) => {
   const identifier = req.query.id;
-  let encryptedDocument, decryptedDocument;
+  let encryptedDocument, decryptedDocument, expireTime;
   try {
     // hash of the document is fetched from the blockchain
     // and converted to the right form so that it can be fetched from ipfs
@@ -158,10 +157,10 @@ docRouter.get('/fetch', async (req, res) => {
   }
   //Try to append the data to file and add expiration
   try {
-    fs.appendFileSync(
-      `./public/${identifier}.${fileType(decryptedDocument).ext}`,
-      decryptedDocument
-    );
+    const path = `./public/${identifier}.${fileType(decryptedDocument).ext}`;
+    fs.appendFileSync(path, decryptedDocument);
+    const expiryTimeEpoc = setSelfDestruct(path, expirationTime);
+    expireTime = new Date(expiryTimeEpoc);
   } catch (err) {
     res
       .status(500)
@@ -172,6 +171,9 @@ docRouter.get('/fetch', async (req, res) => {
     success: true,
     link: `http://localhost:3000/files/${identifier}.${
       fileType(decryptedDocument).ext
-      }`
+      }`,
+    timeNow: new Date().toLocaleString(),
+    expirationTime,
+    expires: expireTime.toLocaleString()
   });
 });

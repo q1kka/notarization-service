@@ -31,7 +31,6 @@
     "time-stamp": "^2.1.0",
     "truffle-contract": "^3.0.6",
     "uniqid": "^5.0.3",
-    "ursa": "^0.9.4",
     "web3": "^1.0.0-beta.35"
   },
   "devDependencies": {
