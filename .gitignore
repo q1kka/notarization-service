@@ -2,3 +2,4 @@ node_modules/
 smart_contract/build/
 public/*
 !public/.gitkeep
+dist

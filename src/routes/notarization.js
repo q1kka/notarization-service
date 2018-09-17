@@ -3,6 +3,7 @@
 */
 
 import { Router } from 'express';
+import '@babel/polyfill';
 
 //  Ethereum imports
 import Web3 from 'web3';
