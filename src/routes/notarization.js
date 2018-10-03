@@ -113,7 +113,7 @@ docRouter.post('/notarize', upload.single('file'), async (req, res) => {
     });
   }
   // Create unique id
-  const id = uniqid();
+  const id = uniqid('NT');
   // Decodes the address sent from Ipfs and creates a hash which is then inserted into the blockchain. In case things go south, return an error.
   const bytes = bs58.decode(hashObject[0].path);
   const parsed = `0x${bytes.toString('hex').substring(4)}`;
