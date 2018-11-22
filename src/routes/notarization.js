@@ -33,13 +33,13 @@ import POEApi from '../../smart_contract/build/contracts/POE.json';
 
 // Encrypt settings
 const algorithm = 'aes-256-ctr';
-const encryptKey = process.env.ENCRYPTKEY || 'development dummy key';
+const encryptKey = process.env.ENCRYPT_KEY || 'development dummy key';
 
 // form-data memory storage
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
-const expirationTime = process.env.EXPIRATIONTIME || 10;
+const expirationTime = process.env.EXPIRATION_TIME || 10;
 
 const docRouter = (module.exports = new Router());
 
@@ -50,7 +50,7 @@ const Poe = new Contract(POEApi);
 Poe.setProvider(web3.currentProvider);
 // Workaround for "TypeError: Cannot read property 'apply' of undefined"
 if (typeof Poe.currentProvider.sendAsync !== 'function') {
-  Poe.currentProvider.sendAsync = function () {
+  Poe.currentProvider.sendAsync = function() {
     return Poe.currentProvider.send.apply(Poe.currentProvider, arguments);
   };
 }
@@ -170,9 +170,9 @@ docRouter.get('/fetch', async (req, res) => {
   //Return a link to the file + link expiry time
   res.json({
     success: true,
-    link: `http://localhost:3000/files/${identifier}.${
+    link: `http://localhost:5000/files/${identifier}.${
       fileType(decryptedDocument).ext
-      }`,
+    }`,
     timeNow: new Date().toLocaleString(),
     expirationTime,
     expires: expireTime.toLocaleString()

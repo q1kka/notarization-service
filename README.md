@@ -9,10 +9,10 @@ This program uses environmental variables for configurations in production. Out 
 When in production, following enviromental variables must be set;
 
 ```env
-PORT=[port to listen to]
+NOTARIZATION_PORT=[port to listen to]
 GETH=[ip:port for ethereum node]
-EXPIRYTIME=[time to host fetched and decrypted files in seconds]
-ENCRYPTKEY=[key string for file encrypt]
+EXPIRATION_TIME=[time to host fetched and decrypted files in seconds]
+ENCRYPT_KEY=[key string for file encrypt]
 ```
 
 ## NPM scripts
