@@ -1,4 +1,4 @@
-pragma solidity ^0.4.24;
+pragma solidity ^0.5.0;
 
 contract POE {
     struct Notarization {
@@ -7,18 +7,18 @@ contract POE {
     }
     mapping (string => Notarization) notarizations;
 
-    function addHash(string _id, bytes32 _hash) public {
+    function addHash(string memory _id, bytes32 _hash) public {
         require(notarizations[_id].hash == bytes32(0), "Nolla");
         notarizations[_id].hash = _hash;
         notarizations[_id].time = block.timestamp;
     }
 
-    function getHash(string _id) public view returns(bytes32) {
+    function getHash(string memory _id) public view returns(bytes32) {
         require(notarizations[_id].hash != bytes32(0), "Nolla");
         return notarizations[_id].hash;
     }
 
-    function getTimestamp(string _id) public view returns(uint) {
+    function getTimestamp(string memory _id) public view returns(uint) {
         return notarizations[_id].time;
     }
 }
