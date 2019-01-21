@@ -2,6 +2,10 @@
 
 Notarization component is software used to notarize text or files in distributed and immutable fashion. It exposes RESTful api for which takes multipart/form-data and stores it to IPFS and saves the hash of the file to smart contract residing in Ethereum blockchain.
 
+## OAPI Specification
+
+OpenAPI / Swagger specifications of this REST API can be found in root of this repository (`swagger.yaml`). These specification can be viewed locally using Swagger plugin or via online editor: `https://editor.swagger.io/`.
+
 ## Environment
 
 This program uses environmental variables for configurations in production. Out of box software works in development mode. In development mode preset enviroment is used.
