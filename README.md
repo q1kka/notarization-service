@@ -1,6 +1,6 @@
-# notarization-component
-
 ![Architecture](public/assets/architecture.png)
+
+# notarization-component
 
 Notarization component is software used to notarize text or files in distributed and immutable fashion. It exposes RESTful api for which takes multipart/form-data and stores it to IPFS and saves the hash of the file to smart contract residing in Ethereum blockchain.
 
