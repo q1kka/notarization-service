@@ -149,7 +149,7 @@ docRouter.get('/fetch', async (req, res) => {
     const encoded = bs58.encode(bytes);
     encryptedDocument = await ipfs.files.get(encoded);
   } catch (err) {
-    res.status(500).json({ success: false, error: 'IPFS error' });
+    res.status(500).json({ success: false, error: err });
   }
   try {
     decryptedDocument = decrypt(encryptedDocument[0].content);
