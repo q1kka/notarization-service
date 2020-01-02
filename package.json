@@ -12,7 +12,7 @@
     "type": "git",
     "url": "git+https://github.com/q1kka/notarization-component.git"
   },
-  "author": "Lohkoketjulaboratorio",
+  "author": "Kai-Markus Lehtimäki / University of Jyväskylä",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/q1kka/notarization-component/issues"
