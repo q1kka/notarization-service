@@ -41,7 +41,7 @@ paths:
       description: 'Used to fetch a file or a text'
       tags:
         - API
-      operationId: 'fethDoc'
+      operationId: 'fetchDoc'
       parameters:
         - in: query
           name: id
