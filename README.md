@@ -1,12 +1,6 @@
-![Architecture](public/assets/architecture.png)
+# notarization-service
 
-# notarization-component
-
-Notarization component is software used to notarize text or files in distributed and immutable fashion. It exposes RESTful api for which takes multipart/form-data and stores it to IPFS and saves the hash of the file to smart contract residing in Ethereum blockchain.
-
-## OAPI Specification
-
-OpenAPI / Swagger specifications of this REST API can be found in root of this repository (`swagger.yaml`). These specification can be viewed locally using Swagger plugin or via online editor: `https://editor.swagger.io/`.
+Notarization component is software used to notarize text or files in distributed and immutable fashion. It exposes RESTful api which takes multipart/form-data from request body, stores it to IPFS and then saves the hash of the file to smart contract on the Ethereum blockchain.
 
 ## Environment
 
@@ -47,3 +41,7 @@ Now you have started a local Ethereum blockchain instance, and other application
 ## Encryption
 
 All the files are hosted in IPFS, but as the files are available for everyone with the correct hash, we need to encrypt the files before uploading them. When the file is being fetched back, it'll be decrypted back to it's original form. These files are in public/ folder. In production, these files are removed after expiration time.
+
+## OAPI Specification
+
+OpenAPI / Swagger specifications of this REST API can be found in root of this repository (`swagger.yaml`). These specification can be viewed locally using Swagger plugin or via online editor: `https://editor.swagger.io/`.
