@@ -9,7 +9,9 @@ This program uses environmental variables for configurations in production. Out 
 When deploying to production, following enviromental variables must be set;
 
 ```env
-NOTARIZATION_PORT=[port to listen to]
+DEPLOY_URI=[deploy host url eg. localhost]
+PORT=[port to listen to]
+IPFS_NODE=[address for IPFS node]
 GETH=[ip:port for ethereum node]
 EXPIRATION_TIME=[time to host fetched and decrypted files in seconds]
 ENCRYPT_KEY=[key string for file encrypt]
