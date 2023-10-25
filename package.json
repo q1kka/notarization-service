@@ -29,7 +29,7 @@
     "multer": "^1.4.1",
     "node-rsa": "^1.0.1",
     "time-stamp": "^2.2.0",
-    "truffle-contract": "^3.0.6",
+    "truffle-contract": "^4.0.31",
     "uniqid": "^5.0.3",
     "web3": "^1.0.0-beta.36"
   },
